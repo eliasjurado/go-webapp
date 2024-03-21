@@ -8,6 +8,9 @@ import (
 )
 
 func main() {
+	p1, _ := page.NewPage("TestPage", "Esta es una página de muestra.")
+	p1.Save()
+
 	http.HandleFunc("/view/", viewHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
