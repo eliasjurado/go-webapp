@@ -1,16 +1,18 @@
 package main
 
 import (
-	"gowiki/page"
+	"fmt"
 	"log"
+	"net/http"
 )
 
 func main() {
-	log.SetFlags(0)
-	p1, _ := page.NewPage("TestPage", "Esta es una página de muestra.")
-	p1.Save()
+	http.HandleFunc("/", handler)
 
-	p2, _ := page.LoadPage("TestPage")
-	log.Printf("%+v\n", string(p2.Body))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "¡Hola! Me encantan los %s", r.URL)
 }
