@@ -36,6 +36,10 @@ func SaveHandler(w http.ResponseWriter, r *http.Request) {
 
 func RenderView(tmplate string, w http.ResponseWriter, p *domain.Page) {
 	tp := "template/" + tmplate + ".html"
-	t, _ := template.ParseFiles(tp)
+	t, err := template.ParseFiles(tp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	t.Execute(w, p)
 }
