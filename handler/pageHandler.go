@@ -4,10 +4,10 @@ import (
 	"gowiki/domain"
 	"html/template"
 	"net/http"
+	"regexp"
 )
 
-func ViewHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[len("/view/"):]
+func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	p, err := domain.LoadPage(title)
 	if err != nil {
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
@@ -16,8 +16,7 @@ func ViewHandler(w http.ResponseWriter, r *http.Request) {
 	RenderView(tp, w, p)
 }
 
-func EditHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[len("/edit/"):]
+func EditHandler(w http.ResponseWriter, r *http.Request, title string) {
 	p, err := domain.LoadPage(title)
 	if err != nil {
 		p = &domain.Page{Title: title}
@@ -26,8 +25,7 @@ func EditHandler(w http.ResponseWriter, r *http.Request) {
 	RenderView(tp, w, p)
 }
 
-func SaveHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[len("/save/"):]
+func SaveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	body := r.FormValue("body")
 	p := &domain.Page{Title: title, Body: []byte(body)}
 	err := p.Save()
@@ -50,4 +48,18 @@ func RenderView(tmplate string, w http.ResponseWriter, p *domain.Page) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
+
+//funcion closure que hace un wrap de otras funciones y valores fuera de ella... hablamos de facade?
+func MakeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        m := validPath.FindStringSubmatch(r.URL.Path)
+        if m == nil {
+            http.NotFound(w, r)
+            return
+        }
+        fn(w, r, m[2])
+    }
 }
